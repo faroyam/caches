@@ -1,0 +1,39 @@
+run:
+  skip-dirs:
+    - bin
+    - cmd
+linters-settings:
+  govet:
+    check-shadowing: true
+  nakedret:
+    lines: 1
+issues:
+  exclude-rules:
+    - path: _test.go
+      linters:
+        - staticcheck
+linters:
+  enable:
+    - dogsled
+    - dupl
+    - gochecknoglobals
+    - gochecknoinits
+    - gocognit
+    - goconst
+    - gocritic
+    - gocyclo
+    - godox
+    - gofmt
+    - goimports
+    - golint
+    - goprintffuncname
+    - interfacer
+    - maligned
+    - misspell
+    - nakedret
+    - prealloc
+    - rowserrcheck
+    - scopelint
+    - stylecheck
+    - unconvert
+    - whitespace
