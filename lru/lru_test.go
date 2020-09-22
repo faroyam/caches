@@ -40,6 +40,48 @@ func TestCache_Get(t *testing.T) {
 	}
 }
 
+func TestCache_LRU(t *testing.T) {
+	cache, _ := lru.New(1)
+	if key, ok := cache.LRU(); ok {
+		t.Errorf("lru %v, want %v", key, "")
+	}
+
+	cache.Put("1", "1")
+	cache.Put("2", "2")
+	cache.Put("2", "2`")
+
+	if key, _ := cache.LRU(); key != "2" {
+		t.Errorf("lru %v, want %v", key, "2")
+	}
+}
+
+func TestCache_Delete(t *testing.T) {
+	cache, _ := lru.New(1)
+	cache.Put("key", "value")
+
+	cache.Delete("key")
+	cache.Delete("non-existing-key")
+
+	if cache.Len() != 0 {
+		t.Errorf("cache len %v, want %v", cache.Len(), 0)
+	}
+
+	if key, ok := cache.LRU(); ok {
+		t.Errorf("lru %v, want %v", key, "''")
+	}
+}
+
+func TestCache_Clear(t *testing.T) {
+	cache, _ := lru.New(10)
+	cache.Put("key1", "value1")
+	cache.Put("key2", "value2")
+	cache.Clear()
+
+	if cache.Len() != 0 {
+		t.Errorf("cache len %v, want %v", cache.Len(), 0)
+	}
+}
+
 func TestReplace(t *testing.T) {
 	cache, _ := lru.New(10)
 	cache.Put("key", "value1")
@@ -59,7 +101,7 @@ func TestReplace(t *testing.T) {
 	}
 }
 
-func TestInsertMoreThanCap(t *testing.T) {
+func TestPutMoreThanCap(t *testing.T) {
 	cache, _ := lru.New(1)
 	key1 := "key1"
 	value1 := "value1"
@@ -85,44 +127,6 @@ func TestInsertMoreThanCap(t *testing.T) {
 	}
 }
 
-func TestCache_LeastRecentlyUsed(t *testing.T) {
-	cache, _ := lru.New(1)
-	if key, ok := cache.LeastRecentlyUsed(); ok {
-		t.Errorf("lru %v, want %v", key, "")
-	}
-
-	cache.Put("1", "1")
-	cache.Put("2", "2")
-	cache.Put("2", "2`")
-
-	if key, _ := cache.LeastRecentlyUsed(); key != "2" {
-		t.Errorf("lru %v, want %v", key, "2")
-	}
-}
-
-func TestCache_Delete(t *testing.T) {
-	cache, _ := lru.New(1)
-	cache.Put("key", "value")
-
-	cache.Delete("key")
-	cache.Delete("non-existing-key")
-
-	if cache.Len() != 0 {
-		t.Errorf("cache len %v, want %v", cache.Len(), 0)
-	}
-}
-
-func TestCache_Clear(t *testing.T) {
-	cache, _ := lru.New(10)
-	cache.Put("key1", "value1")
-	cache.Put("key2", "value2")
-	cache.Clear()
-
-	if cache.Len() != 0 {
-		t.Errorf("cache len %v, want %v", cache.Len(), 0)
-	}
-}
-
 func Test(t *testing.T) {
 	cache, _ := lru.New(2)
 
@@ -133,7 +137,7 @@ func Test(t *testing.T) {
 		t.Errorf("cached value %v, want %v", value, 1)
 	}
 
-	if key, _ := cache.LeastRecentlyUsed(); key != "2" {
+	if key, _ := cache.LRU(); key != "2" {
 		t.Errorf("lru key %v, want %v", key, "2")
 	}
 
@@ -145,7 +149,7 @@ func Test(t *testing.T) {
 		t.Errorf("cached value %v, want %v", value, nil)
 	}
 
-	if key, _ := cache.LeastRecentlyUsed(); key != "1" {
+	if key, _ := cache.LRU(); key != "1" {
 		t.Errorf("lru key %v, want %v", key, "1")
 	}
 
@@ -157,7 +161,7 @@ func Test(t *testing.T) {
 		t.Errorf("cached value %v, want %v", value, nil)
 	}
 
-	if key, _ := cache.LeastRecentlyUsed(); key != "3" {
+	if key, _ := cache.LRU(); key != "3" {
 		t.Errorf("lru key %v, want %v", key, "3")
 	}
 
@@ -171,7 +175,7 @@ func Test(t *testing.T) {
 		t.Errorf("cached value %v, want %v", value, 3)
 	}
 
-	if key, _ := cache.LeastRecentlyUsed(); key != "4" {
+	if key, _ := cache.LRU(); key != "4" {
 		t.Errorf("lru key %v, want %v", key, "4")
 	}
 

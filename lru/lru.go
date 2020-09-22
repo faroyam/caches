@@ -6,18 +6,13 @@ import (
 	"sync"
 )
 
-// Cache represents safe for concurrent use LRU cache
+// Cache represents safe for concurrent use Least Recently Used cache
 type Cache struct {
 	m        *sync.Mutex
 	capacity int
 
 	records *list.List
 	cache   map[string]*list.Element
-}
-
-type record struct {
-	key   string
-	value interface{}
 }
 
 // New returns an initialized cache instance
@@ -68,10 +63,10 @@ func (c *Cache) Put(key string, value interface{}) {
 	c.cache[key] = e
 }
 
-// LeastRecentlyUsed returns (key, true) that was not touched for the longest time.
+// LRU returns (key, true) that was not touched for the longest time.
 // Returns ("", false) if there are no keys in the cache.
 // Does not "use" record i.e. returning record will remain untouched.
-func (c *Cache) LeastRecentlyUsed() (string, bool) {
+func (c *Cache) LRU() (string, bool) {
 	c.m.Lock()
 	defer c.m.Unlock()
 
@@ -106,4 +101,9 @@ func (c *Cache) Clear() {
 // Len returns the number of records in the cache
 func (c *Cache) Len() int {
 	return len(c.cache)
+}
+
+type record struct {
+	key   string
+	value interface{}
 }

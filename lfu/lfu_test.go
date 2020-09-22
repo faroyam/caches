@@ -40,6 +40,50 @@ func TestCache_Get(t *testing.T) {
 	}
 }
 
+func TestCache_LFU(t *testing.T) {
+	cache, _ := lfu.New(1)
+	if key, _, ok := cache.LFU(); ok {
+		t.Errorf("lfu %v, want %v", key, "")
+	}
+
+	cache.Put("1", "1")
+	cache.Put("2", "2")
+	cache.Put("2", "2`")
+
+	if key, frequency, _ := cache.LFU(); key != "2" || frequency != 2 {
+		t.Errorf("lfu %v, want %v", key, "2")
+		t.Errorf("frequency %v, want %v", frequency, 2)
+	}
+}
+
+func TestCache_Delete(t *testing.T) {
+	cache, _ := lfu.New(1)
+	cache.Put("key", "value")
+
+	cache.Delete("key")
+	cache.Delete("non-existing-key")
+
+	if cache.Len() != 0 {
+		t.Errorf("cache len %v, want %v", cache.Len(), 0)
+	}
+
+	if key, frequency, ok := cache.LFU(); ok {
+		t.Errorf("lfu key %v, want %v", key, "''")
+		t.Errorf("frequency %v, want %v", frequency, 0)
+	}
+}
+
+func TestCache_Clear(t *testing.T) {
+	cache, _ := lfu.New(10)
+	cache.Put("key1", "value1")
+	cache.Put("key2", "value2")
+	cache.Clear()
+
+	if cache.Len() != 0 {
+		t.Errorf("cache len %v, want %v", cache.Len(), 0)
+	}
+}
+
 func TestReplace(t *testing.T) {
 	cache, _ := lfu.New(10)
 	cache.Put("key", "value1")
@@ -59,7 +103,7 @@ func TestReplace(t *testing.T) {
 	}
 }
 
-func TestInsertMoreThanCap(t *testing.T) {
+func TestPutMoreThanCap(t *testing.T) {
 	cache, _ := lfu.New(1)
 	key1 := "key1"
 	value1 := "value1"
@@ -85,45 +129,6 @@ func TestInsertMoreThanCap(t *testing.T) {
 	}
 }
 
-func TestCache_LeastFrequentlyUsed(t *testing.T) {
-	cache, _ := lfu.New(1)
-	if key, _, ok := cache.LeastFrequentlyUsed(); ok {
-		t.Errorf("lfu %v, want %v", key, "")
-	}
-
-	cache.Put("1", "1")
-	cache.Put("2", "2")
-	cache.Put("2", "2`")
-
-	if key, frequency, _ := cache.LeastFrequentlyUsed(); key != "2" || frequency != 2 {
-		t.Errorf("lfu %v, want %v", key, "2")
-		t.Errorf("frequency %v, want %v", frequency, 2)
-	}
-}
-
-func TestCache_Delete(t *testing.T) {
-	cache, _ := lfu.New(1)
-	cache.Put("key", "value")
-
-	cache.Delete("key")
-	cache.Delete("non-existing-key")
-
-	if cache.Len() != 0 {
-		t.Errorf("cache len %v, want %v", cache.Len(), 0)
-	}
-}
-
-func TestCache_Clear(t *testing.T) {
-	cache, _ := lfu.New(10)
-	cache.Put("key1", "value1")
-	cache.Put("key2", "value2")
-	cache.Clear()
-
-	if cache.Len() != 0 {
-		t.Errorf("cache len %v, want %v", cache.Len(), 0)
-	}
-}
-
 func Test(t *testing.T) {
 	cache, _ := lfu.New(2)
 
@@ -134,7 +139,7 @@ func Test(t *testing.T) {
 		t.Errorf("cached value %v, want %v", value, 1)
 	}
 
-	if key, frequency, _ := cache.LeastFrequentlyUsed(); key != "2" || frequency != 1 {
+	if key, frequency, _ := cache.LFU(); key != "2" || frequency != 1 {
 		t.Errorf("lfu key %v, want %v", key, "2")
 		t.Errorf("frequency %v, want %v", frequency, 1)
 	}
@@ -156,7 +161,7 @@ func Test(t *testing.T) {
 		t.Errorf("cached value %v, want %v", value, 3)
 	}
 
-	if key, frequency, _ := cache.LeastFrequentlyUsed(); key != "3" || frequency != 2 {
+	if key, frequency, _ := cache.LFU(); key != "3" || frequency != 2 {
 		t.Errorf("lfu key %v, want %v", key, "3")
 		t.Errorf("frequency %v, want %v", frequency, 2)
 	}
@@ -178,7 +183,7 @@ func Test(t *testing.T) {
 		t.Errorf("cached value %v, want %v", value, 4)
 	}
 
-	if key, frequency, _ := cache.LeastFrequentlyUsed(); key != "4" || frequency != 2 {
+	if key, frequency, _ := cache.LFU(); key != "4" || frequency != 2 {
 		t.Errorf("lfu key %v, want %v", key, "4")
 		t.Errorf("frequency %v, want %v", frequency, 2)
 	}
@@ -206,7 +211,7 @@ func Test(t *testing.T) {
 		t.Errorf("cached value %v, want %v", value, 5)
 	}
 
-	if key, frequency, _ := cache.LeastFrequentlyUsed(); key != "5" || frequency != 2 {
+	if key, frequency, _ := cache.LFU(); key != "5" || frequency != 2 {
 		t.Errorf("lfu key %v, want %v", key, "5")
 		t.Errorf("frequency %v, want %v", frequency, 2)
 	}
