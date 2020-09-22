@@ -203,19 +203,29 @@ func Test(t *testing.T) {
 	cache.Put("4", 400)
 	cache.Put("5", 5)
 
-	if value, ok := cache.Get("4"); !ok {
-		t.Errorf("cached value %v, want %v", value, 400)
-	}
-
-	if value, ok := cache.Get("5"); !ok {
-		t.Errorf("cached value %v, want %v", value, 5)
-	}
-
-	if key, frequency, _ := cache.LFU(); key != "5" || frequency != 2 {
+	if key, frequency, _ := cache.LFU(); key != "5" || frequency != 1 {
 		t.Errorf("lfu key %v, want %v", key, "5")
-		t.Errorf("frequency %v, want %v", frequency, 2)
+		t.Errorf("frequency %v, want %v", frequency, 1)
 	}
 
-	// key: 4, frequency: 6
-	// key: 5: frequency: 2
+	// key: 4, frequency: 5
+	// key: 5: frequency: 1
+
+	if cache.Len() != 2 {
+		t.Errorf("cache len %v, want %v", cache.Len(), 2)
+	}
+
+	cache.Delete("5")
+
+	if key, frequency, _ := cache.LFU(); key != "4" || frequency != 5 {
+		t.Errorf("lfu key %v, want %v", key, "4")
+		t.Errorf("frequency %v, want %v", frequency, 5)
+	}
+
+	cache.Delete("4")
+
+	if key, frequency, ok := cache.LFU(); ok {
+		t.Errorf("lfu key %v, want %v", key, "''")
+		t.Errorf("frequency %v, want %v", frequency, 0)
+	}
 }

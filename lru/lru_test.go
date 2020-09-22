@@ -180,4 +180,20 @@ func Test(t *testing.T) {
 	}
 
 	// keys: 3 -> 4
+
+	if cache.Len() != 2 {
+		t.Errorf("cache len %v, want %v", cache.Len(), 2)
+	}
+
+	cache.Delete("4")
+
+	if key, _ := cache.LRU(); key != "3" {
+		t.Errorf("lru key %v, want %v", key, "3")
+	}
+
+	cache.Delete("3")
+
+	if key, ok := cache.LRU(); ok {
+		t.Errorf("lru key %v, want %v", key, "''")
+	}
 }
