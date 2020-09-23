@@ -1,10 +1,10 @@
-package bench_test
+package test_test
 
 import (
 	"strconv"
 	"testing"
 
-	"github.com/faroyam/caches/bench"
+	"github.com/faroyam/caches/test"
 
 	"github.com/faroyam/caches/lfu"
 	"github.com/faroyam/caches/lru"
@@ -55,8 +55,8 @@ func benchmarkPut(cache cache, size int, b *testing.B) {
 	result, _ = cache.Get(strconv.Itoa(size))
 }
 
-func initMap(size, cap int) *bench.Map {
-	m := bench.New(cap)
+func initMap(size, cap int) *test.Map {
+	m := test.New(cap)
 	for i := 0; i < size; i++ {
 		key := strconv.Itoa(i)
 		m.Put(key, key)
