@@ -6,4 +6,4 @@
 A bunch of caches implemented in Go.
 - [Least Recently Used](https://github.com/faroyam/caches/blob/master/lru/lru.go)
 - [Least Frequently Used](https://github.com/faroyam/caches/blob/master/lfu/lfu.go)
-- [Expiring cache with TTL (WIP)](https://github.com/faroyam/caches/blob/master/excache/excache.go)
+- [Expiring cache with TTL](https://github.com/faroyam/caches/blob/master/excache/excache.go)
