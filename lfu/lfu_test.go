@@ -231,10 +231,6 @@ func Test(t *testing.T) {
 	// key: 1, frequency: 5
 	// key: 5: frequency: 1
 
-	if cache.Len() != 2 {
-		t.Errorf("cache len %v, want %v", cache.Len(), 2)
-	}
-
 	cache.Delete("5")
 
 	if key, frequency, _ := cache.LFU(); key != "1" || frequency != 5 {
