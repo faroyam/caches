@@ -47,16 +47,17 @@ func (c *Cache) Put(key string, value interface{}) {
 	c.m.Lock()
 	defer c.m.Unlock()
 
-	if len(c.cache) >= c.capacity {
+	e, ok := c.cache[key]
+	if ok {
+		c.records.Remove(e)
+	}
+
+	if len(c.cache) >= c.capacity && !ok {
 		e := c.records.Remove(c.records.Back())
 		delete(c.cache, e.(record).key)
 	}
 
-	if e, ok := c.cache[key]; ok {
-		c.records.Remove(e)
-	}
-
-	e := c.records.PushFront(record{
+	e = c.records.PushFront(record{
 		key:   key,
 		value: value,
 	})

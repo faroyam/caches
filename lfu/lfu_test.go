@@ -41,14 +41,21 @@ func TestCache_Get(t *testing.T) {
 }
 
 func TestCache_LFU(t *testing.T) {
-	cache, _ := lfu.New(1)
+	cache, _ := lfu.New(2)
 	if key, _, ok := cache.LFU(); ok {
 		t.Errorf("lfu %v, want %v", key, "")
 	}
 
 	cache.Put("1", "1")
 	cache.Put("2", "2")
-	cache.Put("2", "2`")
+	cache.Put("2", "2'")
+
+	if key, frequency, _ := cache.LFU(); key != "1" || frequency != 1 {
+		t.Errorf("lfu %v, want %v", key, "1")
+		t.Errorf("frequency %v, want %v", frequency, 1)
+	}
+
+	cache.Delete("1")
 
 	if key, frequency, _ := cache.LFU(); key != "2" || frequency != 2 {
 		t.Errorf("lfu %v, want %v", key, "2")
@@ -81,6 +88,11 @@ func TestCache_Clear(t *testing.T) {
 
 	if cache.Len() != 0 {
 		t.Errorf("cache len %v, want %v", cache.Len(), 0)
+	}
+
+	if key, frequency, ok := cache.LFU(); ok {
+		t.Errorf("lfu key %v, want %v", key, "''")
+		t.Errorf("frequency %v, want %v", frequency, 0)
 	}
 }
 
@@ -126,6 +138,11 @@ func TestPutMoreThanCap(t *testing.T) {
 
 	if cache.Len() != 1 {
 		t.Errorf("cache len %v, want %v", cache.Len(), 1)
+	}
+
+	if key, frequency, _ := cache.LFU(); key != key2 || frequency != 2 {
+		t.Errorf("lfu %v, want %v", key, key2)
+		t.Errorf("frequency %v, want %v", frequency, 2)
 	}
 }
 
@@ -193,14 +210,17 @@ func Test(t *testing.T) {
 
 	cache.Put("4", 40)
 
+	if value, ok := cache.Get("1"); !ok {
+		t.Errorf("cached value %v, want %v", value, 1)
+	}
+
 	if value, ok := cache.Get("4"); !ok {
 		t.Errorf("cached value %v, want %v", value, 40)
 	}
 
-	// key: 1, frequency: 4
+	// key: 1, frequency: 5
 	// key: 4, frequency: 4
 
-	cache.Put("4", 400)
 	cache.Put("5", 5)
 
 	if key, frequency, _ := cache.LFU(); key != "5" || frequency != 1 {
@@ -208,7 +228,7 @@ func Test(t *testing.T) {
 		t.Errorf("frequency %v, want %v", frequency, 1)
 	}
 
-	// key: 4, frequency: 5
+	// key: 1, frequency: 5
 	// key: 5: frequency: 1
 
 	if cache.Len() != 2 {
@@ -217,12 +237,12 @@ func Test(t *testing.T) {
 
 	cache.Delete("5")
 
-	if key, frequency, _ := cache.LFU(); key != "4" || frequency != 5 {
-		t.Errorf("lfu key %v, want %v", key, "4")
+	if key, frequency, _ := cache.LFU(); key != "1" || frequency != 5 {
+		t.Errorf("lfu key %v, want %v", key, "1")
 		t.Errorf("frequency %v, want %v", frequency, 5)
 	}
 
-	cache.Delete("4")
+	cache.Delete("1")
 
 	if key, frequency, ok := cache.LFU(); ok {
 		t.Errorf("lfu key %v, want %v", key, "''")

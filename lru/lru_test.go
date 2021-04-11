@@ -41,17 +41,17 @@ func TestCache_Get(t *testing.T) {
 }
 
 func TestCache_LRU(t *testing.T) {
-	cache, _ := lru.New(1)
+	cache, _ := lru.New(2)
 	if key, ok := cache.LRU(); ok {
 		t.Errorf("lru %v, want %v", key, "")
 	}
 
 	cache.Put("1", "1")
 	cache.Put("2", "2")
-	cache.Put("2", "2`")
+	cache.Put("2", "2'")
 
-	if key, _ := cache.LRU(); key != "2" {
-		t.Errorf("lru %v, want %v", key, "2")
+	if key, _ := cache.LRU(); key != "1" {
+		t.Errorf("lru %v, want %v", key, "1")
 	}
 }
 

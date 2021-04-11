@@ -33,24 +33,24 @@ func (c *Cache) Get(key string) (interface{}, bool) {
 	c.m.Lock()
 	defer c.m.Unlock()
 
-	er, ok := c.cache[key]
+	e, ok := c.cache[key]
 	if !ok {
 		return nil, false
 	}
 
-	currentRecord := er.Value.(record)
+	currentRecord := e.Value.(record)
 	currentNode := currentRecord.node.Value.(node)
 	newFrequency := currentNode.frequency + 1
 	nextNode := currentRecord.node.Next()
 
 	if nextNode == nil || nextNode.Value.(node).frequency != newFrequency {
-		nextNode = c.nodes.InsertAfter(newNode(newFrequency, list.New()), currentRecord.node)
+		nextNode = c.nodes.InsertBefore(newNode(newFrequency, list.New()), currentRecord.node)
 	}
 
-	c.removeRecord(er, false)
+	c.removeRecord(e, false)
 
-	er = nextNode.Value.(node).records.PushFront(newRecord(nextNode, key, currentRecord.value))
-	c.cache[key] = er
+	e = nextNode.Value.(node).records.PushBack(newRecord(nextNode, key, currentRecord.value))
+	c.cache[key] = e
 
 	return currentRecord.value, true
 }
@@ -61,38 +61,38 @@ func (c *Cache) Put(key string, value interface{}) {
 	defer c.m.Unlock()
 
 	if len(c.cache) >= c.capacity {
-		er, _, _ := c.lfu()
-		if er.Value.(record).key != key {
-			c.removeRecord(er, true)
+		e, _, _ := c.lfu()
+		if e.Value.(record).key != key {
+			c.removeRecord(e, true)
 		}
 	}
 
-	if er, ok := c.cache[key]; ok {
-		currentRecord := er.Value.(record)
+	if e, ok := c.cache[key]; ok {
+		currentRecord := e.Value.(record)
 		currentNode := currentRecord.node.Value.(node)
 
 		newFrequency := currentNode.frequency + 1
 		nextNode := currentRecord.node.Next()
 
 		if nextNode == nil || nextNode.Value.(node).frequency != newFrequency {
-			nextNode = c.nodes.InsertAfter(newNode(newFrequency, list.New()), currentRecord.node)
+			nextNode = c.nodes.InsertBefore(newNode(newFrequency, list.New()), currentRecord.node)
 		}
 
-		c.removeRecord(er, false)
+		c.removeRecord(e, false)
 
-		er = nextNode.Value.(node).records.PushFront(newRecord(nextNode, key, value))
-		c.cache[key] = er
+		e = nextNode.Value.(node).records.PushBack(newRecord(nextNode, key, value))
+		c.cache[key] = e
 
 		return
 	}
 
-	currentNode := c.nodes.Front()
+	frontNode := c.nodes.Front()
 
-	if currentNode == nil || currentNode.Value.(node).frequency != 1 {
-		currentNode = c.nodes.PushFront(newNode(1, list.New()))
+	if frontNode == nil || frontNode.Value.(node).frequency != 1 {
+		frontNode = c.nodes.PushBack(newNode(1, list.New()))
 	}
 
-	er := currentNode.Value.(node).records.PushFront(newRecord(currentNode, key, value))
+	er := frontNode.Value.(node).records.PushBack(newRecord(frontNode, key, value))
 	c.cache[key] = er
 }
 
@@ -103,8 +103,8 @@ func (c *Cache) LFU() (string, int64, bool) {
 	c.m.Lock()
 	defer c.m.Unlock()
 
-	if er, frequency, ok := c.lfu(); ok {
-		return er.Value.(record).key, frequency, true
+	if e, frequency, ok := c.lfu(); ok {
+		return e.Value.(record).key, frequency, true
 	}
 	return "", 0, false
 }
@@ -114,12 +114,12 @@ func (c *Cache) Delete(key string) {
 	c.m.Lock()
 	defer c.m.Unlock()
 
-	er, ok := c.cache[key]
+	e, ok := c.cache[key]
 	if !ok {
 		return
 	}
 
-	c.removeRecord(er, true)
+	c.removeRecord(e, true)
 }
 
 // Clear removes all saved records
@@ -137,20 +137,20 @@ func (c *Cache) Len() int {
 }
 
 func (c *Cache) lfu() (*list.Element, int64, bool) {
-	if en := c.nodes.Front(); en != nil {
-		node := en.Value.(node)
-		if er := node.records.Front(); er != nil {
-			return er, node.frequency, true
+	if frontNode := c.nodes.Back(); frontNode != nil {
+		node := frontNode.Value.(node)
+		if e := node.records.Back(); e != nil {
+			return e, node.frequency, true
 		}
 	}
 	return nil, 0, false
 }
 
-func (c *Cache) removeRecord(er *list.Element, removeFromCache bool) record {
-	currentRecord := er.Value.(record)
+func (c *Cache) removeRecord(e *list.Element, removeFromCache bool) record {
+	currentRecord := e.Value.(record)
 	currentNode := currentRecord.node.Value.(node)
 
-	removedRecord := currentNode.records.Remove(er).(record)
+	removedRecord := currentNode.records.Remove(e).(record)
 	if currentNode.records.Len() == 0 {
 		c.nodes.Remove(currentRecord.node)
 	}
